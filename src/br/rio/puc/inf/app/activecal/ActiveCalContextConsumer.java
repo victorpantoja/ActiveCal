@@ -22,7 +22,7 @@ import br.rio.puc.inf.app.activecal.ActiveCal.ActiveCalendarXML;
 public class ActiveCalContextConsumer {
 
 	private static class DistanceContextConsumer extends ContextConsumer {
-		private static final String TAG = "DistanceContextConsumer";
+		private static final String TAG = "activecal";
 		private Handler handler;
 
 		/**
@@ -70,7 +70,7 @@ public class ActiveCalContextConsumer {
 	}
 
 	private static class MeetingContextConsumer extends ContextConsumer {
-		private static final String TAG = "MeetingContextConsumer";
+		private static final String TAG = "activecal";
 		private Handler mainScreenHandler;
 		private ActiveCal mainActivityObject;
 		private Boolean started;

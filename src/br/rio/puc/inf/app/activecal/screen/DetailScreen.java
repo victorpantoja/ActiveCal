@@ -22,7 +22,7 @@ import android.widget.TextView;
  */
 public class DetailScreen extends Activity
 {
-	private final String TAG = "DetailScreen";
+	private final String TAG = "activecal";
 
 	@Override
 	public void onCreate(Bundle icicle) {

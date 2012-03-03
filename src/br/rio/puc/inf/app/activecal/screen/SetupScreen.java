@@ -19,7 +19,7 @@ import android.widget.EditText;
  */
 public class SetupScreen  extends Activity implements OnClickListener
 {
-	protected static final String TAG = "SetupScreen";
+	protected static final String TAG = "activecal";
 	private EditText textName, textPass;
 
 	@Override

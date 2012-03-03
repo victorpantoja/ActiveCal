@@ -35,7 +35,7 @@ public class MyPositionScreen extends Activity implements Observer
 		myHandler(MyPositionScreen s ) {super(); parent = s;}
 	}
 	
-	private final String TAG = "MyPositionScreen";
+	private final String TAG = "activecal";
 	public int posicao;
 	public Map <String,String> events[];
 

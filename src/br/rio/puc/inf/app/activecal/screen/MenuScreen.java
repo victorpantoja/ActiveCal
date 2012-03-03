@@ -21,7 +21,7 @@ import android.widget.ListView;
  */
 public class MenuScreen extends ListActivity
 {
-	private final String TAG = "MenuScreen";
+	private final String TAG = "activecal";
 	private static final String[] menu = new String[] {"My Calendar","Coming Events"};
 	private static final int MENU_SETUP = 0;
 	

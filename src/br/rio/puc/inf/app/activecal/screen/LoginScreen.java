@@ -21,7 +21,7 @@ import android.widget.Toast;
  */
 public class LoginScreen  extends Activity implements OnClickListener
 {
-	protected static final String TAG = "LoginScreen";
+	protected static final String TAG = "activecal";
 	private EditText textNome, textPass;
 
 	@Override
