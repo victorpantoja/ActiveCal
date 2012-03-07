@@ -3,19 +3,20 @@
  */
 package br.rio.puc.inf.app.activecal.screen;
 
-import android.app.Activity;
+import android.app.ListActivity;
 import android.os.Bundle;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.Window;
+import android.widget.ArrayAdapter;
 
 /**
  * @author victor.pantoja
  *
  */
-public class CalendarScreen extends Activity
+public class CalendarScreen extends ListActivity
 {
-	//private static final String[] menu = new String[] {"View","Eventos"};
+	private static final String[] menu = new String[] {"View","Eventos"};
 	
 	@Override
 	public void onCreate(Bundle icicle) {
@@ -24,7 +25,7 @@ public class CalendarScreen extends Activity
         requestWindowFeature(Window.FEATURE_NO_TITLE);
         //this.getWindow().setBackgroundDrawableResource(R.drawable.fundo_240x320);
         
-		//this.setListAdapter(new ArrayAdapter<String>(this,android.R.layout.simple_list_item_1,menu));
+		this.setListAdapter(new ArrayAdapter<String>(this,android.R.layout.simple_list_item_1,menu));
 	}
 
 	/* Creates the menu items */

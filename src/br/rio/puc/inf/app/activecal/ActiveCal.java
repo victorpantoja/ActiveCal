@@ -238,7 +238,7 @@ public class ActiveCal extends Activity implements Runnable, Observer
 				Log.d(TAG, "Active!");
 
 				/*Publicando o path no CMS. Necessario apenas uma vez*/
-				String domain = "http://www.luizfelipe.eng.br";
+				String domain = "http://victorpantoja.com/cms";
 
 				String apkUrl = domain + "/MeetingContextProvider.apk";
 				String descriptionUrl = apkUrl.concat(".desc");

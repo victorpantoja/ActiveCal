@@ -91,6 +91,7 @@ public class ActiveCalContextConsumer {
 		@Override
 		protected void newContextInformation(ContextInformationObject info)
 		{
+			Log.d(TAG,"chegou uma nova informacao!");
 			if (started == false && info.getInformationClass().equals("meeting")) {
 				mainScreenHandler.sendMessage(Message.obtain(mainScreenHandler, ActiveCal.RUN, mainActivityObject));
 				started = true;
