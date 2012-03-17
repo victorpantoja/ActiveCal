@@ -111,7 +111,7 @@ public class MyPositionScreen extends Activity implements Observer
 	protected void run(){
 		ContextConsumer.startUp(getApplicationContext());
 		try {
-			consumer = ActiveCalContextConsumer.newConsumer(this, msgHandler);
+			consumer = new ActiveCalContextConsumer(getApplicationContext());
 			consumer.addObserver(this);
 			update(null, new Boolean(ContextConsumer.isActive()));
 		}

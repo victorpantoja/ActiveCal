@@ -28,6 +28,8 @@ import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 import org.xml.sax.InputSource;
 
+import com.mobilesocialshare.mss.MSSApi;
+
 import br.rio.puc.inf.app.activecal.screen.LoginScreen;
 import br.rio.puc.inf.app.activecal.screen.MenuScreen;
 import br.rio.puc.inf.lac.mobilis.cms.ContextConsumer;
@@ -35,8 +37,6 @@ import android.app.Activity;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Bundle;
-import android.os.Handler;
-import android.os.Message;
 import android.util.Log;
 import android.view.Window;
 import android.widget.Toast;
@@ -45,7 +45,7 @@ import android.widget.Toast;
  * @author victor.pantoja
  *
  */
-public class ActiveCal extends Activity implements Runnable, Observer
+public class ActiveCal extends Activity implements Observer
 {
 	public static class ActiveCalendarXML {
 		private String xml;
@@ -92,107 +92,71 @@ public class ActiveCal extends Activity implements Runnable, Observer
 		}
 	}
 
-	class activeHandler extends Handler {
-		private ActiveCal parent;
-
-		activeHandler (ActiveCal obj) {
-			parent = obj;
-		}
-
-		@Override
-		public void handleMessage(Message msg) {
-			super.handleMessage(msg);
-
-			switch (msg.what) {
-			case ASKLOGIN:
-				startActivityForResult(new Intent(getApplicationContext(), LoginScreen.class), 1);
-				break;
-
-			case TRYAUTH:
-				SharedPreferences pref = getSharedPreferences("ACTIVECAL", 0);
-				String login = pref.getString("login", "not_found");
-				String pass = pref.getString("pass", "not_found");
-
-				if (tryAuthenticate(login, pass))
-				{
-					Toast.makeText(getApplicationContext(), "Autenticado", Toast.LENGTH_SHORT).show();
-
-					ContextConsumer.startUp(getApplicationContext(), new int[] { 32123, 32124, 32145 }, "10.22.38.114" );
-					// ContextConsumer.startUp(getApplicationContext());
-					try {
-						consumer = ActiveCalContextConsumer.newConsumer(getApplicationContext(), handler, (ActiveCal)msg.obj);
-						consumer.addObserver(parent);
-						update(null, new Boolean(ContextConsumer.isActive()));
-						handler.sendMessageDelayed(Message.obtain(handler, WAITCONTEXT, msg.obj), DELAY);
-					}
-					catch (Exception e) {
-						Log.e(TAG, "error while trying to create consumer - " + e.getMessage(), e);
-					}
-					break;
-				}
-
-				Toast.makeText(getApplicationContext(), "Falhou!!!", Toast.LENGTH_SHORT).show();
-				handler.sendMessageDelayed(Message.obtain(handler, ASKLOGIN, msg.obj), DELAY);
-				break;
-
-			case RUN:
-				startActivity(new Intent(getApplicationContext(), MenuScreen.class));
-				break;
-
-			case WAITCONTEXT:
-				Toast.makeText(getApplicationContext(), "Aguardando Contexto", Toast.LENGTH_LONG).show();
-				break;
-
-			default:
-				finish();
-				break;
-			}
-		}
-	}
 
 	public static ActiveCalendarXML cal;
 	public String login, pass;
 	public static String authdata;
-	private activeHandler handler;
 	private ContextConsumer consumer;
+	private ActiveCalContextConsumer myConsumer;
 
-	public final static int DELAY = 100, ASKLOGIN = 1001, TRYAUTH = 1002, RUN = 1003, WAITCONTEXT = 1004;
 	private final static String TAG = "activecal";
 
 	@Override
 	public void onCreate(Bundle savedInstanceState)
 	{
 		super.onCreate(savedInstanceState);
-
-		handler = new activeHandler(this);
-
+		
 		requestWindowFeature(Window.FEATURE_NO_TITLE);
 		setContentView(R.layout.layout_splash);
 
 		Toast.makeText(this, "Carregando...", Toast.LENGTH_SHORT).show();
 
-		handler.postDelayed(this, DELAY);
+		MSSApi mss;
+		SharedPreferences pref;
+
+		pref = getSharedPreferences("MOBILESOCIALSHARE", MODE_PRIVATE);
+		SharedPreferences.Editor editor;
+		
+		String login = pref.getString("login", "not_found");
+		String pass = pref.getString("pass", "not_found");
+		editor = pref.edit();
+		
+		if(login.equals("not_found") || pass.equals("not_found")){
+			startActivity(new Intent(this,LoginScreen.class));
+		}
+		else{
+			mss = new MSSApi("http://192.168.0.191:9080");
+			Log.d(TAG,"mss instanciado");
+			
+	        try{
+	        	 mss.Initiate();
+	        	 Log.d(TAG,"mss is up!");
+	        }catch (Exception e) {
+				// TODO: handle exception
+			}
+			
+            String auth = mss.Login(login,pass);
+            Log.d(TAG,"user authenticated: "+auth);
+            
+			if(auth.equals("")){
+				Toast.makeText(this, "Wrong User or Password", Toast.LENGTH_SHORT).show();
+				editor.putString("pass", "");
+				editor.commit();
+				startActivity(new Intent(this,LoginScreen.class));
+			}
+			else{
+				startTests();
+				Intent mainScreen = new Intent(this,MenuScreen.class);
+				mainScreen.putExtra("auth", auth.split(";")[0]);
+				mainScreen.putExtra("invites", Integer.parseInt(auth.split(";")[1]));
+				startActivity(mainScreen);
+			}
+		}
+		
 	}
 
-	@Override
-	protected void onActivityResult (int requestCode, int resultCode, Intent data) 
-	{
-		handler.sendMessage(Message.obtain(handler, TRYAUTH, this));
-	}
 
-	@Override
-	public void run()
-	{
-		SharedPreferences pref = getSharedPreferences("ACTIVECAL", 0);
-		SharedPreferences.Editor editor = pref.edit();
-
-		editor.putString("pass", "");
-		editor.commit();
-
-		handler.sendMessageDelayed(Message.obtain(handler, ASKLOGIN, this), DELAY);
-	}
-
-	private boolean tryAuthenticate (String login, String pass)
+	private boolean authenticateWithGoogle (String login, String pass)
 	{
 		try {
 			HttpClient httpclient = new DefaultHttpClient();
@@ -204,6 +168,7 @@ public class ActiveCal extends Activity implements Runnable, Observer
 			nameValuePairs.add(new BasicNameValuePair("Passwd", pass));
 			nameValuePairs.add(new BasicNameValuePair("source", "br.rio.puc.inf.lac.activecal"));
 			nameValuePairs.add(new BasicNameValuePair("service", "cl"));
+			nameValuePairs.add(new BasicNameValuePair("accountType", "GOOGLE"));
 
 			httppost.setEntity(new UrlEncodedFormEntity(nameValuePairs));
 			HttpResponse response = httpclient.execute(httppost);
@@ -261,6 +226,20 @@ public class ActiveCal extends Activity implements Runnable, Observer
 		}
 		else {
 			Log.e(TAG, "Not active");
+		}
+	}
+	
+	protected void startTests() {
+		ContextConsumer.startUp(getApplicationContext());
+		try {
+			myConsumer = new ActiveCalContextConsumer(getApplicationContext());
+			myConsumer.addObserver(this);
+			Log.d(TAG,"observer added");
+			update(null, new Boolean(ContextConsumer.isActive()));
+		}
+		catch (Exception e) {
+			Log.d(TAG,"erro ao tentar criar consumer");
+			Log.e(TAG, "error while trying to create consumer - " + e.getMessage(), e);
 		}
 	}
 }

@@ -3,11 +3,13 @@
  */
 package br.rio.puc.inf.app.activecal.screen;
 
+import com.mobilesocialshare.mss.MSSApi;
+
 import br.rio.puc.inf.app.activecal.R;
 import android.app.Activity;
+import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.Bundle;
-import android.util.Log;
 import android.view.View;
 import android.view.Window;
 import android.view.View.OnClickListener;
@@ -21,6 +23,7 @@ import android.widget.Toast;
  */
 public class LoginScreen  extends Activity implements OnClickListener
 {
+	private MSSApi mss;
 	protected static final String TAG = "activecal";
 	private EditText textNome, textPass;
 
@@ -43,23 +46,39 @@ public class LoginScreen  extends Activity implements OnClickListener
 			textNome.setText(login);
 			textPass.requestFocus();
 		}
+		
+		String pass = pref.getString("pass", "not_found");
+		if (!pass.equals("not_found")) {
+			textPass.setText(pass);
+		}
 
 		button.setOnClickListener(this);
 	}
 
 	@Override
 	public void onClick(View v) {
+    	
+    	mss = new MSSApi("http://192.168.0.191:9080");
+    	String auth = mss.Login(textNome.getText().toString(), textPass.getText().toString());
+    	
 		SharedPreferences pref = getSharedPreferences("ACTIVECAL", MODE_PRIVATE);
 
 		SharedPreferences.Editor editor = pref.edit();
-		
 		editor.putString("login", textNome.getText().toString());
 		editor.putString("pass", textPass.getText().toString());
-
-		Log.i(TAG,"Status salvo para: " + textNome.getText().toString());
-
 		editor.commit();
-		Toast.makeText(getApplicationContext(), "Autenticando...", Toast.LENGTH_SHORT).show();
-		finishFromChild(getParent());
+		
+		if(auth.equals("")){
+			Toast.makeText(getApplicationContext(), "Wrong User or Password", Toast.LENGTH_SHORT).show();
+			editor.putString("pass", "");
+			editor.commit();
+			textPass.setText("");
+		}
+		else{
+			Intent mainScreen = new Intent(getApplicationContext(),MenuScreen.class);
+			mainScreen.putExtra("auth", auth.split(";")[0]);
+			mainScreen.putExtra("invites", Integer.parseInt(auth.split(";")[1]));
+			startActivity(mainScreen);
+		}
 	}
 }
